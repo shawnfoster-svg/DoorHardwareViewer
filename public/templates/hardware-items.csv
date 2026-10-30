@@ -1,0 +1,3 @@
+itemId,hardwareSetId,quantity,unit,category,manufacturer,productCode,description,finish,notes,supplierReference
+0001,0007,3,each,Hinge,Example Hardware,00123,"Hinge, ball bearing",US26D,Illustrative only,00009
+0002,0007,1,each,Lock,Example Hardware,00456,"Lever ""office"" lock",US26D,Confirm handing,00010

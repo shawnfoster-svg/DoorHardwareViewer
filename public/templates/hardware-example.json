@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "projectReference": "Example pavilion",
+  "doors": [
+    {
+      "doorMark": "001",
+      "ifcGlobalId": "0000000000000000000030",
+      "level": "01",
+      "ownerRoom": "001A"
+    },
+    {
+      "doorMark": "002",
+      "ifcGlobalId": "0000000000000000000031",
+      "level": "01",
+      "ownerRoom": "002A"
+    }
+  ],
+  "hardwareSets": [
+    {
+      "hardwareSetId": "0007",
+      "description": "Office entry, shared set",
+      "specSection": "08 71 00"
+    }
+  ],
+  "hardwareItems": [
+    {
+      "itemId": "0001",
+      "hardwareSetId": "0007",
+      "quantity": "3",
+      "unit": "each",
+      "category": "Hinge",
+      "manufacturer": "Example Hardware",
+      "productCode": "00123",
+      "description": "Hinge, ball bearing",
+      "finish": "US26D",
+      "notes": "Illustrative only",
+      "supplierReference": "00009"
+    },
+    {
+      "itemId": "0002",
+      "hardwareSetId": "0007",
+      "quantity": "1",
+      "unit": "each",
+      "category": "Lock",
+      "manufacturer": "Example Hardware",
+      "productCode": "00456",
+      "description": "Lever \"office\" lock",
+      "finish": "US26D",
+      "notes": "Confirm handing",
+      "supplierReference": "00010"
+    }
+  ],
+  "assignments": [
+    {
+      "doorMark": "001",
+      "hardwareSetId": "0007"
+    },
+    {
+      "doorMark": "002",
+      "hardwareSetId": "0007"
+    }
+  ]
+}
