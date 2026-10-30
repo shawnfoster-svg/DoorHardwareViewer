@@ -1,3 +1,21 @@
+# Current verification — hardware import slice (2026-10-30)
+
+`npm run build` passed strict TypeScript and Vite production build. **11 tests passed**: five import/model tests, four import browser workflows and two IFC viewer regression workflows, against production assets. Chromium was supplied via the same temporary @sparticuz harness described below. Browser tests use actual local file inputs, downloads and localStorage; storage failure is deliberately injected in one test to verify no commit occurs.
+
+Verified:
+
+- Multiple hardware items in one set, a shared set assigned to two doors, normalized UUID links and identity stability across preview/reload/export.
+- CSV quoted commas, doubled quotes, multiline values, BOM handling, string identifiers/leading zeros, custom mappings and unrecognized fields.
+- JSON version/type checks; missing required fields, duplicate IDs/assignments/GlobalIds, invalid quantities and references block apply.
+- All mapped rows appear in preview; invalid source text and row errors remain downloadable. Existing identifiers never overwrite existing data.
+- CSV correction/re-preview, explicit atomic apply, readable sets/assigned doors, local persistence, backup source/provenance preservation.
+- Quota failure, another-tab change, damaged saved graph and recovery export preserve existing data and block unintended changes.
+- Original real-IFC load, source property inspection, table/canvas selection, search, transparency/isolation, navigation and error/reopen regression tests still pass.
+
+UI screenshot was inspected locally for layout. New limitations: imports do not bind schedule records to IFC model geometry; review/comment types exist but editing UI does not; backup restore UI is not implemented; comma-delimited UTF-8 CSV only; no large-schedule benchmark, streaming or partial apply. Full source provenance increases localStorage use; exceeding quota reports an unapplied import. See [HARDWARE-IMPORT.md](HARDWARE-IMPORT.md).
+
+The following is retained **slice 1 verification history**; scope statements below describe that earlier version.
+
 # Verification — 2026-10-30
 
 ## Results

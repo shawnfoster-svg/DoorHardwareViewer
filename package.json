@@ -21,11 +21,13 @@
   },
   "homepage": "https://github.com/shawnfoster-svg/DoorHardwareViewer#readme",
   "dependencies": {
+    "papaparse": "5.7.0",
     "three": "0.187.0",
     "web-ifc": "0.0.78"
   },
   "devDependencies": {
     "@playwright/test": "1.64.1",
+    "@types/papaparse": "5.5.2",
     "@types/three": "0.186.0",
     "typescript": "7.0.2",
     "vite": "8.3.5"

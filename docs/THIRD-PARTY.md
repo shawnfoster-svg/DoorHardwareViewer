@@ -6,3 +6,5 @@ Runtime dependencies are pinned in package-lock.json:
 - Three.js 0.187.0 — MIT. Copyright Three.js authors. License copy: [three-MIT.txt](licenses/three-MIT.txt). Source: https://github.com/mrdoob/three.
 
 Components, Fragments and xeokit were evaluated but are not installed or shipped. Fixture and generator are original CC0 materials; see fixture README. No third-party building model is included.
+
+- Papa Parse 5.7.0 — MIT, copyright Matthew Holt and contributors. Unmodified npm package; no worker deployment is used. [License copy](licenses/papaparse-MIT.txt). Official documentation: https://www.papaparse.com/docs ; source: https://github.com/mholt/PapaParse . Development-only types are supplied by @types/papaparse (MIT).

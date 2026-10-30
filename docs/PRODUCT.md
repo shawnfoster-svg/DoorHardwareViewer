@@ -36,3 +36,17 @@ The adapter owns all web-ifc model handles, EXPRESS lookup tables, meshes and re
 - [x] Original CC0 IFC4 fixture with two doors and properties.
 - [x] Production build and browser verification (see TESTING.md).
 - [ ] Hardware import, review workflow persistence (deliberately out of scope).
+
+## Slice 2 — hardware import
+
+The hardware import slice is now implemented. Its model, field requirements, validation and usage are detailed in [HARDWARE-IMPORT.md](HARDWARE-IMPORT.md). Slice 1's original scope above is retained as history.
+
+- [x] Versioned, normalized door schedule, hardware sets, line items and assignments; separate review/comment model.
+- [x] Stable application UUIDs; string business identifiers and leading zeros.
+- [x] Separate CSV tables and versioned JSON package; downloadable examples.
+- [x] CSV mapping, all-row preview, row-level errors and proposed import counts.
+- [x] Missing fields, invalid quantity, duplicates and nonexistent references block the entire batch.
+- [x] Preserve unknown fields, complete source text, row provenance and mappings.
+- [x] Explicit append-only apply; no silent overwrite or invalid-row discard.
+- [x] Local applied-data persistence and full data/provenance export; storage errors preserve prior state.
+- [ ] Explicit IFC matching/binding, backup restore UI, review/comment editing (future slices).

@@ -1,15 +1,16 @@
 import './style.css';
+import { mountHardware } from './hardware/ui';
 import { IfcAdapter, type ElementRecord } from './ifc-adapter';
 
 const $ = <T extends HTMLElement>(id:string) => document.getElementById(id) as T;
 document.querySelector('#app')!.innerHTML=`
-<header><div><span class="eyebrow">DOOR HARDWARE VIEWER / PROTOTYPE 01</span><h1>Find the door. See the data.</h1></div><span class="badge">LOCAL IFC REVIEW</span></header>
+<header><div><span class="eyebrow">DOOR HARDWARE VIEWER / PROTOTYPE 02</span><h1>Find the door. See the data.</h1></div><span class="badge">LOCAL IFC REVIEW</span></header>
 <nav><label class="primary" for="file">Open IFC file</label><input id="file" type="file" accept=".ifc" hidden><button id="sample">Open example</button><span id="filename">No model open</span></nav>
 <div id="status" role="status" aria-live="polite">Choose a local IFC file or explore the two-door example. Your model stays in this browser.</div>
 <main><aside class="doors"><div class="panel-heading"><h2>Doors</h2><span id="count">0</span></div><label for="search">Search name, tag or GlobalId</label><input id="search" type="search" placeholder="e.g. D-101" disabled><div class="table-scroll"><table><thead><tr><th>Tag</th><th>Name</th></tr></thead><tbody id="rows"></tbody></table><p id="empty">Open a model to list its IfcDoor elements.</p></div><p class="small">Select a row to highlight and focus a door. Gold marks the selected element.</p></aside>
 <section class="viewport"><div class="toolbar"><button id="fit" disabled>Fit model</button><label for="visibility">View</label><select id="visibility" disabled><option value="all">All elements</option><option value="transparent">Transparent context</option><option value="doors">Doors only</option></select></div><div id="canvas" aria-label="Interactive IFC model"></div><div class="hint">Drag: orbit · Right drag: pan · Scroll: zoom · Click: inspect</div><div id="busy" hidden>Loading IFC…</div></section>
 <aside class="inspector"><h2>Element inspector</h2><p id="inspect-hint">Select any rendered element to inspect its IFC information.</p><div id="details"></div></aside></main>
-<footer>Source IFC stays unchanged. Manual review only. Hardware import and review persistence are outside this first slice.</footer>`;
+<footer>Source IFC stays unchanged. Manual review only. Hardware data imports save locally. Manual IFC association and review editing are future slices.</footer>`;
 let viewer: IfcAdapter;
 let doors:ElementRecord[]=[],selected:string|null=null,busy=false,selectionVersion=0;
 function message(text:string,error=false) {$('status').textContent=text;$('status').classList.toggle('error',error);$('status').setAttribute('role',error?'alert':'status');}
@@ -66,3 +67,5 @@ try {
  $('search').oninput=renderRows;$('fit').onclick=()=>viewer.fit();$<HTMLSelectElement>('visibility').onchange=e=>viewer.setMode((e.target as HTMLSelectElement).value);
  window.addEventListener('pagehide',()=>viewer.dispose(),{once:true});
 }catch(e){message(`The 3D viewer could not start. WebGL2 is required. ${String(e)}`,true);controls(false,false);$<HTMLInputElement>('file').disabled=true;$<HTMLButtonElement>('sample').disabled=true;}
+
+mountHardware();
