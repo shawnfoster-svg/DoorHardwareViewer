@@ -1,0 +1,33 @@
+{
+  "name": "doorhardwareviewer",
+  "version": "1.0.0",
+  "description": "Door  Hardware Viewer via IFC",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc && vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "test": "playwright test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shawnfoster-svg/DoorHardwareViewer.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/shawnfoster-svg/DoorHardwareViewer/issues"
+  },
+  "homepage": "https://github.com/shawnfoster-svg/DoorHardwareViewer#readme",
+  "dependencies": {
+    "three": "0.187.0",
+    "web-ifc": "0.0.78"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "@types/three": "0.186.0",
+    "typescript": "7.0.2",
+    "vite": "8.3.5"
+  }
+}
