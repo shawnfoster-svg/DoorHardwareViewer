@@ -1,3 +1,19 @@
+# Current verification — association/review slice (2026-10-30)
+
+Production build passed strict TypeScript and Vite bundling. **19 tests passed**: prior 11 import/viewer tests plus five workflow model tests and three real-browser workflow tests. Published source is compared by Git tree hash to this tested local source.
+
+New verification:
+
+- Manual hardware assignment, all item fields, reassignment/removal, statuses/comments, combined filters and persistence after refresh/reopening the IFC.
+- Explicit model scoping, exact GlobalId proposals/application, exact selected-property matching, duplicate/invalid IDs, competing schedule targets and conflicting source identities.
+- **Real duplicate-mark IFC:** changed both fixture door Tags to DUP, imported a mark-only schedule, confirmed the queue was ambiguous and bulk application disabled, then manually selected GlobalId ...0031. Only that door received hardware; the other remained unassigned.
+- Changed IFC bytes produce a different model fingerprint; previous assignments do not appear and source schedules report wrong-model.
+- Optional marker renders and can be clicked to select the associated door/table row. UI screenshot visually inspected for layout. Occlusion/overlap culling is implemented, but not comprehensively benchmarked or pixel-tested across complex building models.
+- Original imports, provenance and schedule assignments are byte-for-byte unchanged by association operations. Before/after assignment and status history, model-scoped comments, unlink/removal behavior and stale-preview protection are tested.
+- Existing damaged-storage/quota/stale-tab, real IFC loading/property inspection and importer regressions continue to pass through the shared store.
+
+No new libraries were added. Chromium/SwiftShader harness and reproduction commands remain as described in earlier verification. Current limits and reviewer acceptance steps are in [ASSOCIATION-REVIEW.md](ASSOCIATION-REVIEW.md). Earlier verification below is retained as history; earlier scope exclusions describe those versions.
+
 # Current verification — hardware import slice (2026-10-30)
 
 `npm run build` passed strict TypeScript and Vite production build. **11 tests passed**: five import/model tests, four import browser workflows and two IFC viewer regression workflows, against production assets. Chromium was supplied via the same temporary @sparticuz harness described below. Browser tests use actual local file inputs, downloads and localStorage; storage failure is deliberately injected in one test to verify no commit occurs.

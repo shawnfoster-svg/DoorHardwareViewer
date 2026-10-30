@@ -24,6 +24,7 @@ export class IfcAdapter {
   readonly camera = new THREE.PerspectiveCamera(45, 1, .01, 10000);
   readonly renderer: THREE.WebGLRenderer;
   readonly controls: OrbitControls;
+  onFrame: () => void = () => {};
   onSelect: (record: ElementRecord | null) => void = () => {};
   private resize: ResizeObserver;
   constructor(private container: HTMLElement) {
@@ -51,7 +52,7 @@ export class IfcAdapter {
       const id = hit?.object.userData.id as number | undefined;
       this.select(id === undefined ? null : this.records.get(id)!.key, false);
     });
-    this.renderer.setAnimationLoop(() => { this.controls.update(); this.renderer.render(this.scene, this.camera); });
+    this.renderer.setAnimationLoop(() => { this.controls.update(); this.renderer.render(this.scene, this.camera); this.onFrame(); });
   }
   private clear() {
     if (this.model !== null) this.api.CloseModel(this.model);
@@ -138,6 +139,42 @@ export class IfcAdapter {
     const id=this.ids.get(key); if(id===undefined || this.model===null) throw new Error('Element is no longer available.');
     const model=this.model;
     return {record:this.records.get(id)!,attributes:this.api.GetLine(model,id,true),propertySets:[...await this.api.properties.getPropertySets(model,id,true,false), ...await this.api.properties.getPropertySets(model,id,true,true)],typeProperties:await this.api.properties.getTypeProperties(model,id,true)};
+  }
+  async matchingData() {
+    const model=this.model;if(model===null)return [];
+    const result:(ElementRecord&{values:Record<string,string[]>})[]=[];
+    for(const id of this.doorIds){
+      if(this.model!==model)throw new Error('Model changed while reading matching properties.');
+      const record=this.records.get(id)!;
+      const values:Record<string,string[]>=Object.create(null);
+      const add=(path:string,value:unknown)=>{if(typeof value==='string'||typeof value==='number'){(values[path]??=[]).push(String(value));}};
+      const line=this.api.GetLine(model,id);
+      for(const [name,value] of Object.entries(line))if(value&&typeof value==='object'&&'value' in value)add(`Attribute.${name}`,(value as {value:unknown}).value);
+      const sets=[...await this.api.properties.getPropertySets(model,id,true,false),...await this.api.properties.getPropertySets(model,id,true,true)];
+      for(const set of sets)for(const property of set.HasProperties||[])add(`${set.Name?.value}.${property.Name?.value}`,property.NominalValue?.value);
+      result.push({...record,values});
+    }
+    if(this.model!==model)throw new Error('Model changed while reading matching properties.');
+    return result;
+  }
+  markerLayout(keys:string[]) {
+    this.scene.updateMatrixWorld(true);this.camera.updateMatrixWorld(true);
+    const result:{key:string;x:number;y:number}[]=[];
+    const visible=this.group.children.filter(o=>o.visible);
+    for(const key of keys.slice(0,100)){
+      const id=this.ids.get(key);if(id===undefined)continue;
+      const bounds=new THREE.Box3();for(const mesh of this.meshes.get(id)||[])if(mesh.visible)bounds.expandByObject(mesh);
+      if(bounds.isEmpty())continue;
+      const center=bounds.getCenter(new THREE.Vector3()),ndc=center.clone().project(this.camera);
+      if(ndc.z< -1||ndc.z>1||Math.abs(ndc.x)>.94||Math.abs(ndc.y)>.94)continue;
+      const direction=center.clone().sub(this.camera.position),distance=direction.length();
+      const ray=new THREE.Raycaster(this.camera.position,direction.normalize(),0,distance);
+      const hit=ray.intersectObjects(visible)[0];if(hit&&hit.object.userData.id!==id)continue;
+      const x=(ndc.x+1)/2*this.container.clientWidth,y=(1-ndc.y)/2*this.container.clientHeight;
+      if(result.some(p=>Math.abs(p.x-x)<170&&Math.abs(p.y-y)<32))continue;
+      result.push({key,x,y});
+    }
+    return result;
   }
   setMode(mode:string) {this.mode=mode;this.visibility();}
   private visibility() {

@@ -31,6 +31,7 @@ npm test
 
 Optional `CHROMIUM_PATH` uses an existing Chromium installation. Tests run against the production preview, with genuine IFC file uploads and rendered-canvas picking. CI runs build and browser tests.
 
+- [Association and review guide](docs/ASSOCIATION-REVIEW.md)
 - [Hardware import guide and normalized data dictionary](docs/HARDWARE-IMPORT.md)
 - [Requirements, data dictionary, plan and checklist](docs/PRODUCT.md)
 - [Viewer comparison and deployment decision](docs/VIEWER-DECISION.md)
@@ -42,6 +43,12 @@ Optional `CHROMIUM_PATH` uses an existing Chromium installation. Tests run again
 
 Click **Hardware import**. Download the examples from the dialog, or use **Load JSON example**. For CSV, choose separate door-assignment, hardware-set and hardware-item files, read them, map columns, then **Validate & preview**. Errors block the entire import. **Apply entire import** appends validated records and saves locally; it never overwrites existing identifiers.
 
-Multiple items can belong to one set and multiple doors can share it. Applied sets/items/assignments are readable in the dialog. **Download data backup** exports stable IDs and provenance; backup restore UI and explicit IFC matching are future work. Identifiers and leading zeros are preserved; no automatic model attachment is performed.
+Multiple items can belong to one set and multiple doors can share it. Applied sets/items/assignments are readable in the dialog. **Download data backup** exports stable IDs and provenance; backup restore UI remains future work. Explicit model matching is now available through Match schedule. Identifiers and leading zeros are preserved; no model attachment occurs merely by importing.
 
 Windows PowerShell: if `npm` scripts are blocked, use `npm.cmd ci` and `npm.cmd run dev`.
+
+## Associate and review
+
+Select any valid IFC door to manually assign/reassign/remove a hardware set, inspect its items, save a status and add comments. Use table filters for assignment and review status; optional Door markers show status labels and select the corresponding door. Edits/history save locally and appear when reopening the same model.
+
+**Match schedule** proposes links only within a reviewer-confirmed source model. Confirm unscoped schedules, propose exact GlobalId or selected-property door-mark matches, then apply only safe exact matches. Ambiguous/conflicting/unmatched records remain in the queue for explicit GlobalId-based resolution. Original imports and IFC properties remain unchanged. See the association guide for correction, history and matching limits.

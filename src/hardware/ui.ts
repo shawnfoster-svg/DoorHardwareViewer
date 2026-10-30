@@ -1,20 +1,15 @@
 import { addCsv,addJson,newInput,csvTable,previewImport,applyImport,fields,type ImportInput,type Preview,type TableKind } from './import';
-import { emptyProject,isHardwareProject,type HardwareProject } from './model';
-const STORAGE='dhv.hardware-project.v1';
+import {hardwareStore} from './store';
 const el=<K extends keyof HTMLElementTagNameMap>(tag:K,text?:string)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;return e;};
 function download(name:string,value:unknown) {
  const blob=new Blob([JSON.stringify(value,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob);const a=el('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 export function mountHardware() {
- let project=emptyProject(),stored:string|null=null,storageError='',input:ImportInput|null=null,preview:Preview|null=null,readVersion=0;
- try {
-  stored=localStorage.getItem(STORAGE);
-  if(stored){const p=JSON.parse(stored);if(!isHardwareProject(p))throw new Error('Unsupported or damaged saved hardware data.');project=p as HardwareProject;}
- }catch(e){storageError=`Saved data could not be read. Imports are blocked to protect it. ${String(e)}`;}
+ let project=hardwareStore.project,storageError=hardwareStore.error,input:ImportInput|null=null,preview:Preview|null=null,readVersion=0;
  const launch=el('button','Hardware import');launch.id='hardware-open';document.querySelector('nav')!.append(launch);
  const dialog=el('dialog');dialog.className='hardware-dialog';dialog.setAttribute('aria-label','Hardware import');
  dialog.innerHTML=`<div class="hardware-title"><div><span class="eyebrow">HARDWARE DATA / V1</span><h2>Import, inspect, then apply.</h2></div><button id="hardware-close">Close</button></div>
- <p class="hardware-note">Import schedule data without changing your IFC. Sets can contain multiple items and serve multiple doors. No automatic IFC matching is applied in this slice.</p>
+ <p class="hardware-note">Import schedule data without changing your IFC. Sets can contain multiple items and serve multiple doors. Use Match schedule in the main viewer to associate imported doors with a confirmed IFC model.</p>
  <div id="hardware-saved" class="hardware-banner" role="status"></div>
  <div class="hardware-links">Download examples: <a download href="${import.meta.env.BASE_URL}templates/door-assignments.csv">Door assignments CSV</a><a download href="${import.meta.env.BASE_URL}templates/hardware-sets.csv">Hardware sets CSV</a><a download href="${import.meta.env.BASE_URL}templates/hardware-items.csv">Hardware items CSV</a><a download href="${import.meta.env.BASE_URL}templates/hardware-example.json">JSON example</a></div>
  <section class="hardware-source"><h3>1. Choose your source</h3><label for="import-format">Format</label><select id="import-format"><option value="csv">Separate CSV tables</option><option value="json">JSON package (schemaVersion 1)</option></select>
@@ -79,14 +74,11 @@ export function mountHardware() {
  $('apply-import').onclick=()=>{
   if(!preview)return;
   try{
-   if(storageError)throw new Error(storageError);
-   if(localStorage.getItem(STORAGE)!==stored)throw new Error('Saved hardware data changed in another tab. Reload before importing; nothing applied.');
-   const next=applyImport(preview,project);const serialized=JSON.stringify(next);
-   // Write atomically before publishing in-memory state; quota/security failures leave staged input intact.
-   localStorage.setItem(STORAGE,serialized);project=next;stored=serialized;preview=null;$<HTMLButtonElement>('apply-import').disabled=true;saved();msg('Import applied and saved locally. No existing records were overwritten.');
+   const next=applyImport(preview,hardwareStore.project);hardwareStore.commit(next);preview=null;$<HTMLButtonElement>('apply-import').disabled=true;saved();msg('Import applied and saved locally. No existing records were overwritten.');
   }catch(e){msg(`Nothing applied: ${String(e)}`,true);}
  };
  $('export-report').onclick=()=>{if(input)download('hardware-import-report.json',{schemaVersion:1,sources:input.batch.sources,mappings:Object.fromEntries(input.tables.map(t=>[t.source.id,t.mapping])),documentExtra:input.batch.extra,issues:preview?.issues||[],preview:preview?.rows||[],validated:!!preview});};
- $('export-project').onclick=()=>download(storageError?'hardware-data-recovery.json':'hardware-data-backup.json',storageError?{error:storageError,originalStoredText:stored}:project);
+ $('export-project').onclick=()=>download(storageError?'hardware-data-recovery.json':'hardware-data-backup.json',storageError?{error:storageError,originalStoredText:hardwareStore.stored}:project);
+ hardwareStore.addEventListener('change',()=>{project=hardwareStore.project;storageError=hardwareStore.error;saved();});
  saved();
 }

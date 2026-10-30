@@ -50,3 +50,17 @@ The hardware import slice is now implemented. Its model, field requirements, val
 - [x] Explicit append-only apply; no silent overwrite or invalid-row discard.
 - [x] Local applied-data persistence and full data/provenance export; storage errors preserve prior state.
 - [ ] Explicit IFC matching/binding, backup restore UI, review/comment editing (future slices).
+
+## Slice 3 — model association and manual review
+
+Implemented; see [ASSOCIATION-REVIEW.md](ASSOCIATION-REVIEW.md) for the workflow, matching rules, additive versioned data dictionary and limits.
+
+- [x] Manual model-door assignment, reassignment, removal, and all set items.
+- [x] Model-scoped status/comments and append-only change history.
+- [x] Assignment and review filters; labels plus color.
+- [x] Explicit source-model confirmation, exact GUID and configurable exact IFC-property matching.
+- [x] Unique exact matches only; duplicate/ambiguous/unmatched/conflicting records stay queued.
+- [x] Manual queue resolution by explicit target GlobalId, plus protected unlink/correction.
+- [x] Optional clickable markers with offscreen, occlusion, overlap and count controls.
+- [x] Two real IFC doors with the same mark cannot silently receive hardware.
+- [ ] Backup restore UI, complex/composite property matching and revision migration (future work).
