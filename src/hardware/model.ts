@@ -1,3 +1,4 @@
+import {validWorkflow,type Workflow} from './workflow';
 /** v1 keeps source identifiers distinct from stable, application-owned UUIDs. */
 export interface Provenance { batchId: string; sourceId: string; table: string; row: number; raw: Record<string, unknown>; }
 export interface ImportedRecord { id: string; provenance: Provenance; extra: Record<string, unknown>; }
@@ -9,7 +10,7 @@ export interface ReviewRecord { id: string; doorRecordId: string; status: 'not-r
 export interface ReviewComment { id: string; reviewRecordId: string; text: string; createdAt: string; }
 export interface Source { id: string; name: string; format: 'csv'|'json'; text: string; }
 export interface ImportBatch { id: string; importedAt: string; sources: Source[]; mappings: Record<string, Record<string, string>>; extra: Record<string, unknown>; }
-export interface HardwareProject { schemaVersion: 1; revision: number; doors: DoorSchedule[]; hardwareSets: HardwareSet[]; hardwareItems: HardwareItem[]; assignments: Assignment[]; reviews: ReviewRecord[]; comments: ReviewComment[]; imports: ImportBatch[]; }
+export interface HardwareProject { schemaVersion: 1; workflow?: Workflow; revision: number; doors: DoorSchedule[]; hardwareSets: HardwareSet[]; hardwareItems: HardwareItem[]; assignments: Assignment[]; reviews: ReviewRecord[]; comments: ReviewComment[]; imports: ImportBatch[]; }
 export const emptyProject = (): HardwareProject => ({schemaVersion:1,revision:0,doors:[],hardwareSets:[],hardwareItems:[],assignments:[],reviews:[],comments:[],imports:[]});
 
 /** Validate the saved application graph before trusting it, without repairing or overwriting it. */
@@ -35,6 +36,6 @@ export function isHardwareProject(value: unknown): value is HardwareProject {
   if(!p.assignments.every(a=>doors.has(a.doorRecordId)&&sets.has(a.hardwareSetRecordId))||!unique(p.assignments.map(a=>a.doorRecordId)))return false;
   if(!p.reviews.every(r=>doors.has(r.doorRecordId)&&['not-reviewed','in-review','accepted','changes-requested'].includes(r.status)))return false;
   const reviews=new Set(p.reviews.map(r=>r.id));
-  return p.comments.every(c=>reviews.has(c.reviewRecordId)&&str(c.text)&&str(c.createdAt));
+  return (p.workflow===undefined||validWorkflow(p.workflow,p)) && p.comments.every(c=>reviews.has(c.reviewRecordId)&&str(c.text)&&str(c.createdAt));
  }catch{return false;}
 }
