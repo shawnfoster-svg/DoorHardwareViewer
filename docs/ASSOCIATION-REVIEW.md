@@ -1,3 +1,5 @@
+> Persistence update: working reviews now use IndexedDB, portable review packages can be restored, and model replacement is controlled. See [PERSISTENCE-EXCHANGE.md](PERSISTENCE-EXCHANGE.md). Earlier storage/restore limitations below describe previous slices.
+
 # Association and review — slice 3
 
 ## Quick check

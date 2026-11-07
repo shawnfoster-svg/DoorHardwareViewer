@@ -8,7 +8,7 @@ export interface Binding extends DoorRef {id:string;scheduleDoorId:string;method
 export interface ModelAssignment extends DoorRef {id:string;hardwareSetRecordId:string;method:MatchMethod;scheduleDoorId?:string;}
 export interface ModelReview extends DoorRef {id:string;status:ReviewStatus;}
 export interface ModelComment {id:string;reviewRecordId:string;text:string;createdAt:string;}
-export interface ChangeEvent extends DoorRef {id:string;at:string;kind:'assignment'|'status'|'comment'|'binding'|'scope';before:unknown;after:unknown;method:string;}
+export interface ChangeEvent extends DoorRef {id:string;at:string;kind:'assignment'|'status'|'comment'|'binding'|'scope'|'replacement';before:unknown;after:unknown;method:string;}
 export interface Workflow {version:1;scopes:{scheduleDoorId:string;modelIdentity:string}[];bindings:Binding[];assignments:ModelAssignment[];reviews:ModelReview[];comments:ModelComment[];history:ChangeEvent[];}
 export const emptyWorkflow=():Workflow=>({version:1,scopes:[],bindings:[],assignments:[],reviews:[],comments:[],history:[]});
 export const workflow=(p:HardwareProject)=>p.workflow||emptyWorkflow();
@@ -100,7 +100,7 @@ export function validWorkflow(w:Workflow,p:HardwareProject):boolean {
   if(!w.reviews.every(r=>ref(r)&&Object.hasOwn(statusLabels,r.status))||!unique(w.reviews.map(key)))return false;
   const reviews=new Set(w.reviews.map(r=>r.id));
   if(!w.comments.every(c=>c&&reviews.has(c.reviewRecordId)&&str(c.text)&&nonempty(c.createdAt)))return false;
-  if(!w.history.every(h=>h&&nonempty(h.modelIdentity)&&str(h.ifcGlobalId)&&['scope','binding','assignment','status','comment'].includes(h.kind)&&str(h.method)&&str(h.at)))return false;
+  if(!w.history.every(h=>h&&nonempty(h.modelIdentity)&&str(h.ifcGlobalId)&&['scope','binding','assignment','status','comment','replacement'].includes(h.kind)&&str(h.method)&&str(h.at)))return false;
   const ids=[...w.bindings,...w.assignments,...w.reviews,...w.comments,...w.history].map(r=>r.id);return ids.every(nonempty)&&unique(ids);
  }catch{return false;}
 }

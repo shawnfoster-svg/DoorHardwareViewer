@@ -44,7 +44,7 @@ Optional `CHROMIUM_PATH` uses an existing Chromium installation. Tests run again
 
 Click **Hardware import**. Download the examples from the dialog, or use **Load JSON example**. For CSV, choose separate door-assignment, hardware-set and hardware-item files, read them, map columns, then **Validate & preview**. Errors block the entire import. **Apply entire import** appends validated records and saves locally; it never overwrites existing identifiers.
 
-Multiple items can belong to one set and multiple doors can share it. Applied sets/items/assignments are readable in the dialog. **Download data backup** exports stable IDs and provenance; backup restore UI remains future work. Explicit model matching is now available through Match schedule. Identifiers and leading zeros are preserved; no model attachment occurs merely by importing.
+Multiple items can belong to one set and multiple doors can share it. Applied sets/items/assignments are readable in the dialog. **Download data backup** exports stable IDs and provenance; backup restore is now available through Review package. Explicit model matching is now available through Match schedule. Identifiers and leading zeros are preserved; no model attachment occurs merely by importing.
 
 Windows PowerShell: if `npm` scripts are blocked, use `npm.cmd ci` and `npm.cmd run dev`.
 
@@ -57,3 +57,9 @@ Select any valid IFC door to manually assign/reassign/remove a hardware set, ins
 ## Hide and unhide
 
 Click an IFC element, then **Hide selected element** at the top of the inspector. Restore it with **Unhide selected element** or its entry under **Hidden elements**; **Unhide all** restores every explicit hide. Hidden doors are labeled in the table. Visibility changes are temporary for this model session and remain subject to the selected View mode.
+
+## Reliable saving and review exchange
+
+Working data now saves in IndexedDB, including one cached local IFC for refresh. Existing localStorage reviews migrate automatically after validation. Use **Review package** to export JSON, preview/restore it, or explicitly clear local working storage. **IFC files are not included in exported JSON**; reopening the matching source restores its associations.
+
+Open a candidate replacement IFC, choose the old reviewed model under **Controlled model replacement**, and create a reconciliation plan. Only unchanged unique GlobalId candidates qualify for controlled bulk transfer. Changed, missing, ambiguous or occupied targets remain queued for manual confirmation. Original reviews remain archived. See [persistence and exchange guide](docs/PERSISTENCE-EXCHANGE.md) for schema/migration policy and limitations.

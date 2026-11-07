@@ -159,6 +159,18 @@ export class IfcAdapter {
     if(this.model!==model)throw new Error('Model changed while reading matching properties.');
     return result;
   }
+  async modelSnapshot(identity:string,file:File,ifcSchema:string) {
+    const data=await this.matchingData();
+    const entries=[];
+    for(const d of data){
+      const parts=(this.meshes.get(this.ids.get(d.key)!)||[]).map(mesh=>({position:Array.from(mesh.geometry.getAttribute('position').array),index:Array.from(mesh.geometry.index?.array||[]),transform:mesh.matrix.toArray()}));
+      const payload=JSON.stringify({name:d.name,tag:d.tag,values:d.values,parts});
+      const bytes=new TextEncoder().encode(payload),digest=await crypto.subtle.digest('SHA-256',bytes);
+      const signature='sha256:'+Array.from(new Uint8Array(digest)).map(x=>x.toString(16).padStart(2,'0')).join('');
+      entries.push({globalId:d.globalId,name:d.name,tag:d.tag,identityIssue:d.identityIssue,signature});
+    }
+    return {identity,inventoryComplete:true,sourceFile:{name:file.name,size:file.size,sha256:identity},ifcSchema,capturedAt:new Date().toISOString(),doors:entries};
+  }
   markerLayout(keys:string[]) {
     this.scene.updateMatrixWorld(true);this.camera.updateMatrixWorld(true);
     const result:{key:string;x:number;y:number}[]=[];
@@ -208,5 +220,6 @@ export class IfcAdapter {
     this.controls.target.copy(center); this.camera.position.copy(center).addScaledVector(direction,distance);
     this.camera.near=Math.max(distance/10000,.001);this.camera.far=Math.max(distance*100,1000);this.camera.updateProjectionMatrix();this.controls.update();
   }
+  close() {this.clear();}
   dispose() { this.clear();this.resize.disconnect();this.controls.dispose();this.renderer.setAnimationLoop(null);this.renderer.dispose(); }
 }

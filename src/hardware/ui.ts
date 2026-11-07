@@ -1,4 +1,5 @@
 import { addCsv,addJson,newInput,csvTable,previewImport,applyImport,fields,type ImportInput,type Preview,type TableKind } from './import';
+import {exportReview} from './exchange';
 import {hardwareStore} from './store';
 const el=<K extends keyof HTMLElementTagNameMap>(tag:K,text?:string)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;return e;};
 function download(name:string,value:unknown) {
@@ -71,14 +72,14 @@ export function mountHardware() {
   try{const r=await fetch(`${import.meta.env.BASE_URL}templates/hardware-example.json`);if(!r.ok)throw new Error(`Example HTTP ${r.status}`);const text=await r.text();if(version!==readVersion)return;input=newInput();addJson(input,'hardware-example.json',text);mapping();showPreview();}catch(e){if(version===readVersion)msg(String(e),true);}
  };
  $('preview-import').onclick=showPreview;
- $('apply-import').onclick=()=>{
+ $('apply-import').onclick=async()=>{
   if(!preview)return;
   try{
-   const next=applyImport(preview,hardwareStore.project);hardwareStore.commit(next);preview=null;$<HTMLButtonElement>('apply-import').disabled=true;saved();msg('Import applied and saved locally. No existing records were overwritten.');
+   const next=applyImport(preview,hardwareStore.project);await hardwareStore.commit(next);preview=null;$<HTMLButtonElement>('apply-import').disabled=true;saved();msg('Import applied and saved locally. No existing records were overwritten.');
   }catch(e){msg(`Nothing applied: ${String(e)}`,true);}
  };
  $('export-report').onclick=()=>{if(input)download('hardware-import-report.json',{schemaVersion:1,sources:input.batch.sources,mappings:Object.fromEntries(input.tables.map(t=>[t.source.id,t.mapping])),documentExtra:input.batch.extra,issues:preview?.issues||[],preview:preview?.rows||[],validated:!!preview});};
- $('export-project').onclick=()=>download(storageError?'hardware-data-recovery.json':'hardware-data-backup.json',storageError?{error:storageError,originalStoredText:hardwareStore.stored}:project);
+ $('export-project').onclick=()=>{try{download(storageError?'hardware-data-recovery.json':'hardware-review-package.json',storageError?{error:storageError,originalStoredText:hardwareStore.stored}:exportReview(project));}catch(e){msg(String(e),true);}};
  hardwareStore.addEventListener('change',()=>{project=hardwareStore.project;storageError=hardwareStore.error;saved();});
  saved();
 }

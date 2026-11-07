@@ -1,3 +1,4 @@
+import type {ModelSnapshot,ReplacementPlan} from './exchange-model';
 import {validWorkflow,type Workflow} from './workflow';
 /** v1 keeps source identifiers distinct from stable, application-owned UUIDs. */
 export interface Provenance { batchId: string; sourceId: string; table: string; row: number; raw: Record<string, unknown>; }
@@ -10,7 +11,7 @@ export interface ReviewRecord { id: string; doorRecordId: string; status: 'not-r
 export interface ReviewComment { id: string; reviewRecordId: string; text: string; createdAt: string; }
 export interface Source { id: string; name: string; format: 'csv'|'json'; text: string; }
 export interface ImportBatch { id: string; importedAt: string; sources: Source[]; mappings: Record<string, Record<string, string>>; extra: Record<string, unknown>; }
-export interface HardwareProject { schemaVersion: 1; workflow?: Workflow; revision: number; doors: DoorSchedule[]; hardwareSets: HardwareSet[]; hardwareItems: HardwareItem[]; assignments: Assignment[]; reviews: ReviewRecord[]; comments: ReviewComment[]; imports: ImportBatch[]; }
+export interface HardwareProject { schemaVersion: 1; models?: ModelSnapshot[]; activeModelIdentity?:string|null; replacements?:ReplacementPlan[]; workflow?: Workflow; revision: number; doors: DoorSchedule[]; hardwareSets: HardwareSet[]; hardwareItems: HardwareItem[]; assignments: Assignment[]; reviews: ReviewRecord[]; comments: ReviewComment[]; imports: ImportBatch[]; }
 export const emptyProject = (): HardwareProject => ({schemaVersion:1,revision:0,doors:[],hardwareSets:[],hardwareItems:[],assignments:[],reviews:[],comments:[],imports:[]});
 
 /** Validate the saved application graph before trusting it, without repairing or overwriting it. */
@@ -36,6 +37,29 @@ export function isHardwareProject(value: unknown): value is HardwareProject {
   if(!p.assignments.every(a=>doors.has(a.doorRecordId)&&sets.has(a.hardwareSetRecordId))||!unique(p.assignments.map(a=>a.doorRecordId)))return false;
   if(!p.reviews.every(r=>doors.has(r.doorRecordId)&&['not-reviewed','in-review','accepted','changes-requested'].includes(r.status)))return false;
   const reviews=new Set(p.reviews.map(r=>r.id));
+  if(!validModelMetadata(p))return false;
   return (p.workflow===undefined||validWorkflow(p.workflow,p)) && p.comments.every(c=>reviews.has(c.reviewRecordId)&&str(c.text)&&str(c.createdAt));
+ }catch{return false;}
+}
+
+export function validModelMetadata(p:HardwareProject):boolean {
+ try{
+ const hash=(s:unknown)=>typeof s==='string'&&/^sha256:[a-f0-9]{64}$/.test(s);
+ if(p.models!==undefined&&(!Array.isArray(p.models)||new Set(p.models.map(m=>m.identity)).size!==p.models.length||!p.models.every(m=>m&&hash(m.identity)&&(m.inventoryComplete===undefined||typeof m.inventoryComplete==='boolean')&&m.sourceFile&&m.sourceFile.sha256===m.identity&&typeof m.sourceFile.name==='string'&&Number.isSafeInteger(m.sourceFile.size)&&m.sourceFile.size>=0&&typeof m.ifcSchema==='string'&&typeof m.capturedAt==='string'&&Array.isArray(m.doors)&&m.doors.every(d=>d&&(d.globalId===null||typeof d.globalId==='string')&&typeof d.name==='string'&&typeof d.tag==='string'&&hash(d.signature)&&(d.identityIssue===undefined||typeof d.identityIssue==='string')))))return false;
+ const models=new Set(p.models?.map(m=>m.identity)||[]);
+ if(p.activeModelIdentity!==undefined&&p.activeModelIdentity!==null&&!models.has(p.activeModelIdentity))return false;
+ if(p.replacements!==undefined){
+  if(!Array.isArray(p.replacements)||new Set(p.replacements.map(r=>r.id)).size!==p.replacements.length)return false;
+  for(const r of p.replacements){
+   if(!r||typeof r.id!=='string'||!models.has(r.fromIdentity)||!models.has(r.toIdentity)||r.fromIdentity===r.toIdentity||typeof r.createdAt!=='string'||!Array.isArray(r.rows))return false;
+   if(new Set(r.rows.map(x=>x.oldGlobalId)).size!==r.rows.length)return false;
+   for(const x of r.rows){
+    if(!x||typeof x.oldGlobalId!=='string'||!['unique','changed','missing','ambiguous','conflict','resolved'].includes(x.state)||typeof x.reason!=='string'||!Array.isArray(x.candidateGlobalIds)||!x.candidateGlobalIds.every(g=>typeof g==='string'))return false;
+    if(x.state==='resolved'&&(typeof x.resolvedTo!=='string'||!['global-id','manual'].includes(x.method||'')||typeof x.resolvedAt!=='string'))return false;
+   }
+  }
+ }
+
+ return true;
  }catch{return false;}
 }

@@ -1,5 +1,6 @@
 import {test,expect} from '@playwright/test';
 import fs from 'node:fs';
+import {readWorking,changeToken} from './storage-helpers';
 test('JSON preview, atomic apply, readable sets, no overwrite, persistence and backup IDs',async({page})=>{
  await page.goto('/');await page.getByRole('button',{name:'Hardware import',exact:true}).click();
  await page.getByRole('button',{name:'Load JSON example'}).click();await expect(page.locator('#import-message')).toContainText('Validation passed');
@@ -7,11 +8,11 @@ test('JSON preview, atomic apply, readable sets, no overwrite, persistence and b
  await page.getByRole('button',{name:'Apply entire import'}).click();await expect(page.locator('#hardware-saved')).toContainText('2 schedule doors · 1 sets · 2 items · 2 assignments');
  await expect(page.locator('#applied-hardware')).toContainText('Doors: 001, 002');await expect(page.locator('#applied-hardware')).toContainText('Hinge, ball bearing');
  await page.screenshot({path:'test-results/hardware-import.png',fullPage:true});
- const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('dhv.hardware-project.v1')!));
+ const saved=await readWorking(page);
  await page.getByRole('button',{name:'Load JSON example'}).click();await expect(page.locator('#import-errors')).toContainText('already exists');await expect(page.locator('#apply-import')).toBeDisabled();
  await page.reload();await page.getByRole('button',{name:'Hardware import',exact:true}).click();await expect(page.locator('#hardware-saved')).toContainText('2 schedule doors');
- expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('dhv.hardware-project.v1')!))).toEqual(saved);
- const downloaded=page.waitForEvent('download');await page.getByRole('button',{name:'Download data backup'}).click();const d=await downloaded;const data=JSON.parse(fs.readFileSync((await d.path())!,'utf8'));expect(data.doors[0].id).toBe(saved.doors[0].id);expect(data.imports[0].sources[0].text).toContain('supplierReference');
+ expect(await readWorking(page)).toEqual(saved);
+ const downloaded=page.waitForEvent('download');await page.getByRole('button',{name:'Download data backup'}).click();const d=await downloaded;const data=JSON.parse(fs.readFileSync((await d.path())!,'utf8'));expect(data.project.doors[0].id).toBe(saved.doors[0].id);expect(data.project.imports[0].sources[0].text).toContain('supplierReference');
 });
 test('CSV separate tables, column mapping, preview errors and corrected file',async({page})=>{
  await page.goto('/');await page.getByRole('button',{name:'Hardware import',exact:true}).click();
@@ -25,8 +26,8 @@ test('CSV separate tables, column mapping, preview errors and corrected file',as
 });
 test('storage failure and other-tab changes never apply or overwrite staged data',async({page})=>{
  await page.goto('/');await page.getByRole('button',{name:'Hardware import',exact:true}).click();await page.getByRole('button',{name:'Load JSON example'}).click();await expect(page.locator('#apply-import')).toBeEnabled();
- await page.evaluate(()=>{Storage.prototype.setItem=()=>{throw new Error('Quota exceeded');};});await page.getByRole('button',{name:'Apply entire import'}).click();await expect(page.locator('#import-message')).toContainText('Nothing applied');await expect(page.locator('#hardware-saved')).toContainText('0 schedule doors');
- await page.reload();await page.getByRole('button',{name:'Hardware import',exact:true}).click();await page.getByRole('button',{name:'Load JSON example'}).click();await expect(page.locator('#apply-import')).toBeEnabled();await page.evaluate(()=>localStorage.setItem('dhv.hardware-project.v1','another tab'));await page.getByRole('button',{name:'Apply entire import'}).click();await expect(page.locator('#import-message')).toContainText('another tab');expect(await page.evaluate(()=>localStorage.getItem('dhv.hardware-project.v1'))).toBe('another tab');
+ await page.evaluate(()=>{IDBObjectStore.prototype.put=()=>{throw new DOMException('Quota exceeded','QuotaExceededError');};});await page.getByRole('button',{name:'Apply entire import'}).click();await expect(page.locator('#import-message')).toContainText('Nothing applied');await expect(page.locator('#hardware-saved')).toContainText('0 schedule doors');
+ await page.reload();await page.getByRole('button',{name:'Hardware import',exact:true}).click();await page.getByRole('button',{name:'Load JSON example'}).click();await expect(page.locator('#apply-import')).toBeEnabled();await changeToken(page);await page.getByRole('button',{name:'Apply entire import'}).click();await expect(page.locator('#import-message')).toContainText('another tab');expect(await readWorking(page)).toMatchObject({revision:0});
 });
 
 test('damaged stored data is protected and recovery exports original bytes',async({page})=>{

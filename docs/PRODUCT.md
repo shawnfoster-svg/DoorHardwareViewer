@@ -68,3 +68,14 @@ Implemented; see [ASSOCIATION-REVIEW.md](ASSOCIATION-REVIEW.md) for the workflow
 ## Slice 4 — individual element visibility
 
 Implemented: select any rendered IFC element and Hide/Unhide it, restore individual entries from a hidden-elements list, or Unhide all. Explicit hides compose with isolation/transparency, are respected by picking/markers, and reset for each viewing session. Fit operates on visible geometry. Source IFC and hardware/review data are unaffected. See [ELEMENT-VISIBILITY.md](ELEMENT-VISIBILITY.md) for acceptance and behavior.
+
+## Slice 5 — persistence, exchange and controlled replacement
+
+- [x] IndexedDB atomic working graph/current IFC cache, refresh restoration and protected legacy migration.
+- [x] Versioned JSON review package export/preview/restore, explicit IFC exclusion and matching-source prompt.
+- [x] Export → clear → import → matching IFC reopen round trip preserves review data/provenance.
+- [x] Unrelated IFC never inherits existing associations.
+- [x] Saved model inventories and source fingerprints; GlobalId reconciliation with changed/missing/ambiguous/conflicting queues.
+- [x] Controlled unique/unchanged bulk transfer and explicit manual target selection, original/unresolved records retained.
+- [x] Schema migration policy, JSON Schema and current limits documented in [PERSISTENCE-EXCHANGE.md](PERSISTENCE-EXCHANGE.md).
+- [ ] IFC-included JSON, multi-review merging, complex semantic revision detection and authenticated audit (outside this prototype).

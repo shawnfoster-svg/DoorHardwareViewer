@@ -1,3 +1,5 @@
+> Persistence update: working reviews now use IndexedDB, portable review packages can be restored, and model replacement is controlled. See [PERSISTENCE-EXCHANGE.md](PERSISTENCE-EXCHANGE.md). Earlier storage/restore limitations below describe previous slices.
+
 # Individual element visibility
 
 Click any rendered IFC element (wall, slab, door, etc.). The **Element visibility** panel at the top of the inspector provides **Hide selected element**. The selection remains available for property inspection and **Unhide selected element**, even while its geometry is hidden.

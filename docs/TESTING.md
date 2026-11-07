@@ -1,3 +1,22 @@
+# Current verification — IndexedDB, review exchange and model replacement
+
+Production build passed strict TypeScript and Vite bundling. **28 tests passed** against production assets with actual IndexedDB, downloaded JSON packages and real IFC geometry. No persistence or model parser mock substitutes for the working paths; the quota-failure test deliberately injects a failing IndexedDB write.
+
+New acceptance verification:
+
+- Refresh restores the cached local IFC and its assignment/status/comment review. New working writes no longer use localStorage.
+- Export JSON → explicit clear working storage → preview/import package restores the full workflow/provenance graph; the excluded-IFC manifest asks for the matching source file.
+- Opening unrelated IFC bytes applies no existing associations; reopening the matching source restores them.
+- Valid legacy localStorage data migrates to IndexedDB with stable IDs/provenance and is removed only after successful migration. Invalid legacy data remains protected.
+- Reconciliation separates unique, changed, missing and ambiguous identities, rejects occupied targets and future/invalid package schemas, and persists unresolved plans through refresh and package roundtrip.
+- Real IFC changed-GlobalId test keeps missing-source review data until explicit manual mapping to the new GlobalId, then restores its hardware and comment on the chosen target.
+- Real IFC surviving-GlobalId/name-change test flags changed signature and transfers nothing for that reviewed door until manual confirmation. Original review records remain archived.
+- Previous hardware import, shared sets, duplicate guards, review history, manual association, source IFC inspection, temporary hide/unhide, picking and marker regressions still pass.
+
+The exchange dialog screenshot was visually inspected. A status-save/comment-entry timing regression was fixed by preserving drafts and waiting for saves; its workflow test passed three consecutive runs before the final full 28-test pass. Limits: conservative geometry/scalar signatures, no universal IFC semantic diff; no IFC embedding in JSON, package merging or multi-user service. Native browser storage remains subject to quota/eviction and device loss. See [PERSISTENCE-EXCHANGE.md](PERSISTENCE-EXCHANGE.md) and [review package JSON Schema](../schemas/review-package-v1.schema.json). Chromium/SwiftShader harness and standard reproduction commands are described in prior verification below.
+
+Earlier reports follow as historical scope.
+
 # Current verification — individual element visibility (2026-11-07)
 
 Production build passed strict TypeScript and Vite bundling. **21 tests passed**: all prior 19 importer/viewer/workflow tests plus two real-IFC visibility browser tests.
