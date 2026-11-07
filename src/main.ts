@@ -1,12 +1,16 @@
 import './style.css';
+import {ExchangeUI} from './hardware/exchange-ui';
+import {hardwareStore} from './hardware/store';
 import {ElementVisibilityUI} from './element-visibility';
 import {ReviewUI} from './hardware/review-ui';
 import { mountHardware } from './hardware/ui';
 import { IfcAdapter, type ElementRecord } from './ifc-adapter';
 
+document.querySelector('#app')!.textContent='Opening saved review…';
+await hardwareStore.ready;
 const $ = <T extends HTMLElement>(id:string) => document.getElementById(id) as T;
 document.querySelector('#app')!.innerHTML=`
-<header><div><span class="eyebrow">DOOR HARDWARE VIEWER / PROTOTYPE 04</span><h1>Find the door. See the data.</h1></div><span class="badge">LOCAL IFC REVIEW</span></header>
+<header><div><span class="eyebrow">DOOR HARDWARE VIEWER / PROTOTYPE 05</span><h1>Find the door. See the data.</h1></div><span class="badge">LOCAL IFC REVIEW</span></header>
 <nav><label class="primary" for="file">Open IFC file</label><input id="file" type="file" accept=".ifc" hidden><button id="sample">Open example</button><span id="filename">No model open</span></nav>
 <div id="status" role="status" aria-live="polite">Choose a local IFC file or explore the two-door example. Your model stays in this browser.</div>
 <main><aside class="doors"><div class="panel-heading"><h2>Doors</h2><span id="count">0</span></div><label for="search">Search name, tag or GlobalId</label><input id="search" type="search" placeholder="e.g. D-101" disabled><label for="assignment-filter">Assignment</label><select id="assignment-filter"><option value="all">All assignments</option><option value="assigned">Assigned</option><option value="unassigned">Unassigned</option></select><label for="status-filter">Review status</label><select id="status-filter"><option value="all">All review statuses</option><option value="not-reviewed">Not reviewed</option><option value="in-review">In review</option><option value="accepted">Accepted</option><option value="changes-requested">Changes required</option></select><div class="table-scroll"><table><thead><tr><th>Tag</th><th>Name</th></tr></thead><tbody id="rows"></tbody></table><p id="empty">Open a model to list its IfcDoor elements.</p></div><p class="small">Select a row to highlight and focus a door. Gold marks the selected element.</p></aside>
@@ -14,8 +18,12 @@ document.querySelector('#app')!.innerHTML=`
 <aside class="inspector"><h2>Element inspector</h2><p id="inspect-hint">Select any rendered element to inspect its IFC information.</p><div id="details"></div></aside></main>
 <footer>Source IFC stays unchanged. Manual review only. Hardware data imports save locally. Assignments and reviews are model-scoped. No automated compliance.</footer>`;
 let viewer: IfcAdapter;
+let viewerReady=false;
 let reviewUI:ReviewUI|undefined;
 let visibilityUI:ElementVisibilityUI|undefined;
+let exchangeUI:ExchangeUI|undefined;
+let openEpoch=0;
+function resetWorkingView(){openEpoch++;viewer?.close();doors=[];selected=null;reviewUI?.setModel([],'','');visibilityUI?.select(null);exchangeUI?.setModel('');$('details').replaceChildren();$('filename').textContent='No model open';controls(false,false);renderRows();message('Reopen the matching source IFC to display the restored review.');}
 let doors:ElementRecord[]=[],selected:string|null=null,busy=false,selectionVersion=0;
 function message(text:string,error=false) {$('status').textContent=text;$('status').classList.toggle('error',error);$('status').setAttribute('role',error?'alert':'status');}
 function renderRows() {
@@ -56,21 +64,30 @@ function controls(loading:boolean,loaded:boolean) {
  for(const id of ['search','fit','visibility'])($ (id) as HTMLInputElement|HTMLButtonElement).disabled=loading||!loaded;
  $('canvas').style.pointerEvents=loading?'none':'auto';
 }
-async function open(file:File) {
- if(busy)return;controls(true,false);visibilityUI?.select(null);reviewUI?.setModel([],'','');doors=[];selected=null;$<HTMLInputElement>('search').value='';selectionVersion++;$('details').replaceChildren();renderRows();
+async function open(file:File,restoring=false) {
+ if(busy)return;const epoch=++openEpoch;controls(true,false);visibilityUI?.select(null);reviewUI?.setModel([],'','');exchangeUI?.setModel('');doors=[];selected=null;$<HTMLInputElement>('search').value='';selectionVersion++;$('details').replaceChildren();renderRows();
  try {
-  const result=await viewer.open(file,s=>{message(s);$('busy').textContent=s;});doors=result.doors;reviewUI?.setModel(doors,result.identity,file.name);
+  const result=await viewer.open(file,s=>{message(s);$('busy').textContent=s;});
+  if(epoch!==openEpoch)return;
+  if(restoring&&result.identity!==hardwareStore.project.activeModelIdentity)throw new Error('Cached IFC fingerprint does not match the saved review. Reopen the matching source IFC.');
+  if(!restoring||hardwareStore.project.activeModelIdentity!==result.identity){
+   const snapshot=await viewer.modelSnapshot(result.identity,file,result.schema);if(epoch!==openEpoch)return;const next=structuredClone(hardwareStore.project);next.models=(next.models||[]).filter(m=>m.identity!==result.identity);next.models.push(snapshot);next.activeModelIdentity=result.identity;next.revision++;await hardwareStore.commit(next,file);
+  }
+  if(epoch!==openEpoch)return;
+  doors=result.doors;reviewUI?.setModel(doors,result.identity,file.name);exchangeUI?.setModel(result.identity);
   $('filename').textContent=file.name;$<HTMLSelectElement>('visibility').value='all';
   message(`${result.schema} · ${result.elementCount} rendered elements · ${doors.length} doors${result.unrenderedDoors?` · ${result.unrenderedDoors} doors have no supported geometry`:''}${doors.some(d=>d.identityIssue)?' · Warning: doors with invalid identities require review':''}`);
   renderRows();$('inspect-hint').textContent='Select a door or any rendered element.';controls(false,true);
- }catch(e){viewer.select(null);$('filename').textContent='No model open';message(`Unable to load IFC: ${e instanceof Error?e.message:String(e)} Try another uncompressed IFC file.`,true);controls(false,false);}
+ }catch(e){if(epoch!==openEpoch)return;viewer.close();viewer.select(null);$('filename').textContent='No model open';message(`Unable to load IFC: ${e instanceof Error?e.message:String(e)} Try another uncompressed IFC file.`,true);controls(false,false);}
 }
 try {
  viewer=new IfcAdapter($('canvas'));reviewUI=new ReviewUI(viewer);visibilityUI=new ElementVisibilityUI(viewer,renderRows);reviewUI.onChange=renderRows;for(const id of ['assignment-filter','status-filter'])$(id).onchange=renderRows;viewer.onSelect=record=>{void inspect(record);};
  $<HTMLInputElement>('file').onchange=e=>{const input=e.target as HTMLInputElement;if(input.files?.[0])void open(input.files[0]);input.value='';};
  $('sample').onclick=async()=>{try{const r=await fetch(`${import.meta.env.BASE_URL}fixtures/two-doors.ifc`);if(!r.ok)throw new Error(`Example HTTP ${r.status}`);await open(new File([await r.blob()],'two-doors.ifc'));}catch(e){message(`Unable to open example: ${String(e)}`,true);}};
  $('search').oninput=renderRows;$('fit').onclick=()=>viewer.fit();$<HTMLSelectElement>('visibility').onchange=e=>viewer.setMode((e.target as HTMLSelectElement).value);
- window.addEventListener('pagehide',()=>viewer.dispose(),{once:true});
+ window.addEventListener('pagehide',()=>viewer.dispose(),{once:true});viewerReady=true;
 }catch(e){message(`The 3D viewer could not start. WebGL2 is required. ${String(e)}`,true);controls(false,false);$<HTMLInputElement>('file').disabled=true;$<HTMLButtonElement>('sample').disabled=true;}
 
 mountHardware();
+exchangeUI=new ExchangeUI(resetWorkingView);
+if(viewerReady&&hardwareStore.file&&!hardwareStore.error){const file=hardwareStore.file;void open(file,true);}else if(viewerReady&&hardwareStore.project.activeModelIdentity){message(`Saved review restored. IFC not cached/included. Reopen source IFC matching ${hardwareStore.project.activeModelIdentity}.`);}

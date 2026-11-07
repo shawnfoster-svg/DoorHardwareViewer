@@ -1,0 +1,365 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Door Hardware Review package v1",
+  "description": "Structural interchange schema. Runtime additionally validates complete application record types, referential integrity, unique identities, supported versions and manifest/model agreement. IFC bytes are explicitly excluded.",
+  "type": "object",
+  "required": [
+    "format",
+    "packageVersion",
+    "exportedAt",
+    "ifcFileIncluded",
+    "instructions",
+    "modelIdentity",
+    "sourceFiles",
+    "project"
+  ],
+  "properties": {
+    "format": {
+      "const": "dhv-review"
+    },
+    "packageVersion": {
+      "const": 1
+    },
+    "exportedAt": {
+      "type": "string"
+    },
+    "ifcFileIncluded": {
+      "const": false
+    },
+    "instructions": {
+      "type": "string"
+    },
+    "modelIdentity": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "sourceFiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "size",
+          "sha256"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^sha256:[a-f0-9]{64}$"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "project": {
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "revision",
+        "doors",
+        "hardwareSets",
+        "hardwareItems",
+        "assignments",
+        "reviews",
+        "comments",
+        "imports"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "models": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "identity",
+              "sourceFile",
+              "ifcSchema",
+              "capturedAt",
+              "doors"
+            ],
+            "properties": {
+              "identity": {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              },
+              "sourceFile": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "size",
+                  "sha256"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "size": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^sha256:[a-f0-9]{64}$"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "ifcSchema": {
+                "type": "string"
+              },
+              "capturedAt": {
+                "type": "string"
+              },
+              "doors": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "globalId",
+                    "name",
+                    "tag",
+                    "signature"
+                  ],
+                  "properties": {
+                    "globalId": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "tag": {
+                      "type": "string"
+                    },
+                    "signature": {
+                      "type": "string",
+                      "pattern": "^sha256:[a-f0-9]{64}$"
+                    },
+                    "identityIssue": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              },
+              "inventoryComplete": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "activeModelIdentity": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^sha256:[a-f0-9]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "replacements": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "fromIdentity",
+              "toIdentity",
+              "createdAt",
+              "rows"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "fromIdentity": {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              },
+              "toIdentity": {
+                "type": "string",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              },
+              "createdAt": {
+                "type": "string"
+              },
+              "rows": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "oldGlobalId",
+                    "state",
+                    "reason",
+                    "candidateGlobalIds"
+                  ],
+                  "properties": {
+                    "oldGlobalId": {
+                      "type": "string"
+                    },
+                    "state": {
+                      "enum": [
+                        "unique",
+                        "changed",
+                        "missing",
+                        "ambiguous",
+                        "conflict",
+                        "resolved"
+                      ]
+                    },
+                    "reason": {
+                      "type": "string"
+                    },
+                    "candidateGlobalIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "resolvedTo": {
+                      "type": "string"
+                    },
+                    "method": {
+                      "enum": [
+                        "global-id",
+                        "manual"
+                      ]
+                    },
+                    "resolvedAt": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "workflow": {
+          "type": "object",
+          "required": [
+            "version",
+            "scopes",
+            "bindings",
+            "assignments",
+            "reviews",
+            "comments",
+            "history"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "scopes": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "bindings": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "assignments": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "reviews": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "comments": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "history": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            }
+          },
+          "additionalProperties": true
+        },
+        "doors": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "hardwareSets": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "hardwareItems": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "assignments": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "reviews": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "comments": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "imports": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

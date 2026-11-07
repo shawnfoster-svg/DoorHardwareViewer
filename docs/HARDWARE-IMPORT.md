@@ -1,3 +1,5 @@
+> Persistence update: working reviews now use IndexedDB, portable review packages can be restored, and model replacement is controlled. See [PERSISTENCE-EXCHANGE.md](PERSISTENCE-EXCHANGE.md). Earlier storage/restore limitations below describe previous slices.
+
 > Slice 3 update: explicit model matching, assignments and reviewer edits are now available separately in [ASSOCIATION-REVIEW.md](ASSOCIATION-REVIEW.md). The following describes the import-only boundary; importing alone still never binds data to geometry.
 
 # Hardware import — version 1
