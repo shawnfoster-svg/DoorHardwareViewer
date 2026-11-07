@@ -20,6 +20,8 @@ export class IfcAdapter {
   private selected: number | null = null;
   private doorIds = new Set<number>();
   private mode = 'all';
+  private hiddenIds = new Set<number>();
+  onVisibilityChange: () => void = () => {};
   readonly scene = new THREE.Scene();
   readonly camera = new THREE.PerspectiveCamera(45, 1, .01, 10000);
   readonly renderer: THREE.WebGLRenderer;
@@ -60,7 +62,7 @@ export class IfcAdapter {
     for (const list of this.meshes.values()) for (const mesh of list) {
       mesh.geometry.dispose(); (mesh.material as THREE.Material).dispose();
     }
-    this.group.clear(); this.doorIds.clear(); this.meshes.clear(); this.records.clear(); this.ids.clear(); this.selected = null;
+    this.group.clear(); this.hiddenIds.clear(); this.doorIds.clear(); this.meshes.clear(); this.records.clear(); this.ids.clear(); this.selected = null; this.onVisibilityChange();
   }
   async open(file: File, progress: (s: string) => void) {
     this.clear();
@@ -176,11 +178,20 @@ export class IfcAdapter {
     }
     return result;
   }
+  canHide(key:string) {const id=this.ids.get(key);return id!==undefined&&!!this.meshes.get(id)?.length;}
+  isHidden(key:string) {const id=this.ids.get(key);return id!==undefined&&this.hiddenIds.has(id);}
+  hiddenElements():ElementRecord[] {return [...this.hiddenIds].map(id=>({...this.records.get(id)!}));}
+  setHidden(key:string,hidden:boolean) {
+    const id=this.ids.get(key);if(id===undefined||!this.canHide(key))return;
+    if(hidden)this.hiddenIds.add(id);else this.hiddenIds.delete(id);
+    this.visibility();this.onVisibilityChange();
+  }
+  unhideAll() {this.hiddenIds.clear();this.visibility();this.onVisibilityChange();}
   setMode(mode:string) {this.mode=mode;this.visibility();}
   private visibility() {
     for(const [id,list] of this.meshes) for(const mesh of list) {
       const door=this.doorIds.has(id), selected=id===this.selected;
-      mesh.visible=this.mode!=='doors'||door||selected;
+      mesh.visible=!this.hiddenIds.has(id)&&(this.mode!=='doors'||door||selected);
       const mat=mesh.material as THREE.MeshStandardMaterial;
       mat.color.copy(selected ? new THREE.Color('#f3ad26') : mesh.userData.color);
       mat.transparent=this.mode==='transparent'&&!door&&!selected; mat.opacity=mat.transparent?.15:1; mat.depthWrite=!mat.transparent;
@@ -189,7 +200,7 @@ export class IfcAdapter {
   fit(key?:string) {
     const bounds=new THREE.Box3();
     const list=key ? this.meshes.get(this.ids.get(key)!) || [] : this.group.children;
-    for(const object of list) bounds.expandByObject(object);
+    for(const object of list) if(object.visible)bounds.expandByObject(object);
     if(bounds.isEmpty()) return;
     const center=bounds.getCenter(new THREE.Vector3()), radius=Math.max(bounds.getSize(new THREE.Vector3()).length()/2,.3);
     const distance=radius/Math.sin(Math.atan(Math.tan(THREE.MathUtils.degToRad(this.camera.fov/2))*Math.min(1,this.camera.aspect)))*1.2;

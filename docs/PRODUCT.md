@@ -64,3 +64,7 @@ Implemented; see [ASSOCIATION-REVIEW.md](ASSOCIATION-REVIEW.md) for the workflow
 - [x] Optional clickable markers with offscreen, occlusion, overlap and count controls.
 - [x] Two real IFC doors with the same mark cannot silently receive hardware.
 - [ ] Backup restore UI, complex/composite property matching and revision migration (future work).
+
+## Slice 4 — individual element visibility
+
+Implemented: select any rendered IFC element and Hide/Unhide it, restore individual entries from a hidden-elements list, or Unhide all. Explicit hides compose with isolation/transparency, are respected by picking/markers, and reset for each viewing session. Fit operates on visible geometry. Source IFC and hardware/review data are unaffected. See [ELEMENT-VISIBILITY.md](ELEMENT-VISIBILITY.md) for acceptance and behavior.

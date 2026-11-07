@@ -1,3 +1,13 @@
+# Current verification — individual element visibility (2026-11-07)
+
+Production build passed strict TypeScript and Vite bundling. **21 tests passed**: all prior 19 importer/viewer/workflow tests plus two real-IFC visibility browser tests.
+
+Verified visible geometry changes on hiding a selected door; hidden geometry cannot be picked; table reselection and all/transparent/doors-only mode changes do not override an explicit hide. Door markers disappear when hidden and return when unhidden. Tests also cover multiple hidden doors, individual restoration, Unhide all, picking/hiding a non-door IFC wall/slab, and clearing hidden state after a failed replacement and successful reopen. The visibility screenshot was visually inspected.
+
+Visibility is session-only, not persisted. Unhide remains subject to View mode. Fit uses visible geometry. Source files, hardware imports, assignments and reviews are unaffected. No new package/API deployment requirements. See [ELEMENT-VISIBILITY.md](ELEMENT-VISIBILITY.md) for user instructions and acceptance checklist. Tests use the same temporary Chromium/SwiftShader harness described below against the production build.
+
+Earlier verification follows as history.
+
 # Current verification — association/review slice (2026-10-30)
 
 Production build passed strict TypeScript and Vite bundling. **19 tests passed**: prior 11 import/viewer tests plus five workflow model tests and three real-browser workflow tests. Published source is compared by Git tree hash to this tested local source.

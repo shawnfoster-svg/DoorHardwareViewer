@@ -31,6 +31,7 @@ npm test
 
 Optional `CHROMIUM_PATH` uses an existing Chromium installation. Tests run against the production preview, with genuine IFC file uploads and rendered-canvas picking. CI runs build and browser tests.
 
+- [Hide/unhide individual elements](docs/ELEMENT-VISIBILITY.md)
 - [Association and review guide](docs/ASSOCIATION-REVIEW.md)
 - [Hardware import guide and normalized data dictionary](docs/HARDWARE-IMPORT.md)
 - [Requirements, data dictionary, plan and checklist](docs/PRODUCT.md)
@@ -52,3 +53,7 @@ Windows PowerShell: if `npm` scripts are blocked, use `npm.cmd ci` and `npm.cmd 
 Select any valid IFC door to manually assign/reassign/remove a hardware set, inspect its items, save a status and add comments. Use table filters for assignment and review status; optional Door markers show status labels and select the corresponding door. Edits/history save locally and appear when reopening the same model.
 
 **Match schedule** proposes links only within a reviewer-confirmed source model. Confirm unscoped schedules, propose exact GlobalId or selected-property door-mark matches, then apply only safe exact matches. Ambiguous/conflicting/unmatched records remain in the queue for explicit GlobalId-based resolution. Original imports and IFC properties remain unchanged. See the association guide for correction, history and matching limits.
+
+## Hide and unhide
+
+Click an IFC element, then **Hide selected element** at the top of the inspector. Restore it with **Unhide selected element** or its entry under **Hidden elements**; **Unhide all** restores every explicit hide. Hidden doors are labeled in the table. Visibility changes are temporary for this model session and remain subject to the selected View mode.
